@@ -1,35 +1,50 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          shutdown-kvm-guests
+# Provides:          virtmm
 # Required-Start:    
-# Required-Stop:     shutdown-kvm-guests $remote_fs
+# Required-Stop:     
 # Should-Stop:
 # Default-Start:
 # Default-Stop:      0 1 6
 # Short-Description: Cleanly shut down all running KVM domains.
 # Description:
 ### END INIT INFO
+# Based on https://raw.githubusercontent.com/kumina/shutdown-kvm-guests/master/shutdown-kvm-guests.sh
 # Inspired by https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/350936.
 
 # Configure timeout (in seconds).
 TIMEOUT=300
 VIRSH=/usr/bin/virsh
+LOCKF=/tmp/virtmm.lock
 
 # List running domains.
 list_running_domains() {
-	$VIRSH list | grep running | awk '{ print $2}'
+	#$VIRSH list | grep running | awk '{ print $2}'
+  $VIRSH list --name
 }
 
 case "$1" in
-	start,reload,restart,force-reload)
+	reload,restart,force-reload)
 		# We don't do anything here.
 		;;
+  start)    
+    # Create some sort of semaphore.
+		touch ${LOCKF}
+    
+		echo "Try to startup all inactive KVM domains..."
 
+		list_inactive_domains | while read DOMAIN; do
+			# Try to startup given domain.
+			$VIRSH start $DOMAIN
+		done
+    
+    rm $LOCKF
+    ;;
 	stop)
 		echo "Try to cleanly shut down all running KVM domains..."
 
 		# Create some sort of semaphore.
-		touch /tmp/shutdown-kvm-guests
+		touch $LOCKF
 
 		# Try to shutdown each domain, one by one.
 		list_running_domains | while read DOMAIN; do
@@ -54,5 +69,7 @@ case "$1" in
 			# Give libvirt some time for killing off the domain.
 			sleep 3
 		done
+    
+    rm $LOCKF
 		;;
 esac
