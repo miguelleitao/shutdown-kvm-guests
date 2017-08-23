@@ -14,3 +14,4 @@ installs the script in /usr/local/bin
 To use virtmm as a init.d script, just place the script in /etc/init.d or similar directory used in the target system.
 
 
+
