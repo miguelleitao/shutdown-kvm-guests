@@ -6,7 +6,7 @@
 # Should-Stop:
 # Default-Start:
 # Default-Stop:      0 1 6
-# Short-Description: Cleanly shut down all running KVM domains.
+# Short-Description: Start and shut down all KVM domains.
 # Description:
 ### END INIT INFO
 # Based on https://raw.githubusercontent.com/kumina/shutdown-kvm-guests/master/shutdown-kvm-guests.sh
@@ -20,8 +20,13 @@ LOCKF=/tmp/virtmm.lock
 # List running domains.
 list_running_domains() {
 	#$VIRSH list | grep running | awk '{ print $2}'
-  $VIRSH list --name
+  $VIRSH list --name | head -n -1
 }
+# List inactive domains.
+list_inactive_domains() {
+  $VIRSH list --inactive --name | head -n -1
+}
+
 
 case "$1" in
 	reload,restart,force-reload)
