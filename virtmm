@@ -13,9 +13,10 @@
 # Inspired by https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/350936.
 
 # Configure timeout (in seconds).
-TIMEOUT=300
+TIMEOUT=10
 VIRSH=/usr/bin/virsh
 LOCKF=/tmp/virtmm.lock
+TERM=gnome-terminal
 
 # List running domains.
 list_running_domains() {
@@ -32,6 +33,15 @@ case "$1" in
 	reload,restart,force-reload)
 		# We don't do anything here.
 		;;
+  status)
+	$VIRSH list --all
+	;;
+  console)
+	list_running_domains | while read DOMAIN; do
+	    $TERM -e "$VIRSH console $DOMAIN " &
+	done
+        #$TERM -e "$VIRSH console vhost01" &
+	;;
   start)    
     # Create some sort of semaphore.
 		touch ${LOCKF}
